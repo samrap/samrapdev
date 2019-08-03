@@ -1,0 +1,63 @@
+---
+- name: Install base packages
+  apt:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - wget
+      - curl
+      - vim
+      - zsh
+
+- name: Check if bat, the better cat, is installed
+  command: dpkg-query -W bat
+  register: bat_check_deb
+  failed_when: bat_check_deb.rc > 1 # Don't fail if package does not exist
+  changed_when: bat_check_deb.rc == 1 # _Do_ mark as "changed" so we know to download.
+
+- name: Download bat, the better cat
+  register: download_bat
+  get_url:
+    url: https://github.com/sharkdp/bat/releases/download/v0.11.0/bat_0.11.0_amd64.deb
+    dest: /tmp/bat_0.11.0_amd64.deb
+  when: bat_check_deb.rc == 1
+
+- name: Install bat, the better cat
+  apt: deb="/tmp/bat_0.11.0_amd64.deb"
+  become: yes
+  when: bat_check_deb.rc == 1
+
+- name: Upload base shell configuration
+  copy:
+    src: ".sh_profile"
+    dest: "/home/{{ ansible_env.USER }}/.sh_profile"
+
+- name: Upload oh-my-zsh configuration
+  copy:
+    src: ".zshrc"
+    dest: "/home/{{ ansible_env.USER }}/.zshrc"
+
+# - name: Set ZSH as default shell
+#   shell: chsh -s /bin/zsh
+#   become: yes
+
+- name: Set zsh as default shell
+  user: "name={{ ansible_env.USER }} shell=/usr/bin/zsh"
+  become: yes
+
+- name: Cloning  oh-my-zsh
+  git:
+    repo: https://github.com/robbyrussell/oh-my-zsh
+    dest: ~/.oh-my-zsh
+
+- name: Download vim colorschemes
+  git:
+    repo: https://github.com/flazz/vim-colorschemes.git
+    dest: "/home/{{ ansible_env.USER }}/.vim"
+    depth: 1
+
+- name: Upload vim configuration
+  copy:
+    src: ".vimrc"
+    dest: "/home/{{ ansible_env.USER }}/.vimrc"

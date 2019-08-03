@@ -1,0 +1,5 @@
+[samrapdev]
+10.10.10.10
+
+[samrapdev:vars]
+ansible_python_interpreter=/usr/bin/python3

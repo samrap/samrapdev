@@ -1,0 +1,130 @@
+---
+- name: Add Certbot repository
+  apt_repository:
+    repo: ppa:certbot/certbot
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install Certbot packages
+  apt:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - software-properties-common
+      - certbot
+
+- name: Install Docker requirements
+  apt:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: true
+
+- name: Register lsb release
+  command: lsb_release -cs
+  register: lsb_release
+
+- name: Add Docker stable repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ lsb_release.stdout }} stable"
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install Docker CE
+  apt:
+    name: docker-ce
+  become: true
+
+- name: Add user '{{ ansible_env.USER }}' to docker group
+  user:
+    name: '{{ ansible_env.USER }}'
+    groups: docker
+    append: yes
+  become: true
+
+- name: Download docker-compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/1.21.2/docker-compose-Linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: 0755
+  become: true
+
+- name: Create Ghost install directory
+  file:
+    path: "/home/{{ ansible_env.USER }}/ghost"
+    state: directory
+    mode: 0755
+  register: ghost_path
+
+- name: Upload docker-compose configuration
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ ghost_path.path }}/docker-compose.yml"
+
+- name: Create nginx Docker directory
+  file:
+    path: "{{ ghost_path.path }}/nginx"
+    state: directory
+    mode: 0755
+  register: ghost_nginx_path
+
+- name: Upload nginx configuration
+  template:
+    src: nginx/default.conf.j2
+    dest: "{{ ghost_nginx_path.path }}/default.conf"
+
+- name: Upload nginx Dockerfile
+  copy:
+    src: nginx/Dockerfile
+    dest: "{{ ghost_nginx_path.path }}/Dockerfile"
+
+- name: Create ghost_content mount point
+  file:
+    path: /opt/ghost_content
+    state: directory
+  become: true
+
+- name: Create ghost_mysql mount point
+  file:
+    path: /opt/ghost_mysql
+    state: directory
+  become: true
+
+- name: Create nginx mount point
+  file:
+    path: /usr/share/nginx/html
+    state: directory
+  become: true
+
+- name: Install Python Pip docker dependencies
+  pip:
+    name:
+      - docker
+      - docker-compose
+
+- name: Start Docker daemon
+  service:
+    name: docker
+    state: started
+  become: true
+
+- name: Bring up Ghost Docker services
+  docker_service:
+    project_src: "{{ ghost_path.path }}"
+    state: present
+    # TODO: fix so that we can use TLS
+    # see: https://github.com/ansible/ansible/issues/29471#issuecomment-329736312
+    tls: no

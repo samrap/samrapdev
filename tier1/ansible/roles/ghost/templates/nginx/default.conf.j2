@@ -1,0 +1,12 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name samrapdev.com;
+
+  location / {
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_pass http://ghost:2368;
+  }
+}

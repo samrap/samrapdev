@@ -1,0 +1,7 @@
+---
+- name: Configure the web server
+  hosts: all
+  remote_user: samrap
+  roles:
+    - base
+    - ghost
