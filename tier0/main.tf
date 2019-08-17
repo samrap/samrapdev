@@ -1,13 +1,19 @@
 provider "digitalocean" {
   token = "${var.do_token}"
 
-  spaces_access_id  = "${var.spaces_access_id}"
-  spaces_secret_key = "${var.spaces_secret_key}"
+  spaces_access_id  = "${var.do_spaces_access_id}"
+  spaces_secret_key = "${var.do_spaces_secret_key}"
 }
 
 resource "digitalocean_ssh_key" "default" {
   name       = "sam_rapaport_macbook_pro"
   public_key = "${file("/Users/sam/.ssh/id_rsa.pub")}"
+}
+
+resource "digitalocean_spaces_bucket" "samrapdev-backups" {
+  name   = "samrapdev-backups"
+  region = "${var.region}"
+  acl    = "private"
 }
 
 resource "digitalocean_tag" "firewall_webserver" {
