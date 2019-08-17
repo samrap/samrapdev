@@ -1,0 +1,24 @@
+version: '3'
+services:
+
+  ghost:
+    image: ghost:latest
+    restart: always
+    environment:
+      url: https://samrapdev.com
+    volumes:
+      - /opt/ghost_content:/var/lib/ghost/content
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - ghost
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - /usr/share/nginx/html:/usr/share/nginx/html

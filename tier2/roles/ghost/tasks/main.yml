@@ -97,12 +97,6 @@
     state: directory
   become: true
 
-- name: Create ghost_mysql mount point
-  file:
-    path: /opt/ghost_mysql
-    state: directory
-  become: true
-
 - name: Create nginx mount point
   file:
     path: /usr/share/nginx/html
