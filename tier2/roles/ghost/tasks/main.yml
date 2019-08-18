@@ -103,6 +103,26 @@
     state: directory
   become: true
 
+- name: Restore SSL certificates
+  register: letsencrypt_restored
+  shell: systools restore -d /etc/letsencrypt
+  become: yes
+  ignore_errors: yes
+
+- debug:
+    msg: Failed to restore letsencrypt certificates. You may need to generate these manually.
+  when: letsencrypt_restored.rc > 0
+
+- name: Restore ghost_content
+  register: ghost_content_restored
+  shell: systools restore -d /opt/ghost_content
+  become: yes
+  ignore_errors: yes
+
+- debug:
+    msg: Failed to restore ghost_content. You may need to generate these manually.
+  when: ghost_content_restored.rc > 0
+
 - name: Install Python Pip docker dependencies
   pip:
     name:
@@ -116,6 +136,7 @@
   become: true
 
 - name: Bring up Ghost Docker services
+  # TODO: figure out why this fails on first run
   docker_service:
     project_src: "{{ ghost_path.path }}"
     state: present

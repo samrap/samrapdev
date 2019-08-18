@@ -28,10 +28,21 @@
   become: yes
   when: bat_check_deb.rc == 1
 
-- name: Upload base shell configuration
-  copy:
-    src: ".sh_profile"
-    dest: "/home/{{ ansible_env.USER }}/.sh_profile"
+- name: Upload credentials file
+  template:
+    src: .credentials
+    dest: "/home/{{ ansible_env.USER }}/.credentials"
+
+- name: Upload profile
+  template:
+    src: ".profile"
+    dest: "/home/{{ ansible_env.USER }}/.profile"
+
+- name: Source profile
+  shell: ". /home/{{ ansible_env.USER }}/.profile"
+  args:
+    # .profile calls the `source` builtin which does not exist in sh.
+    executable: /bin/bash
 
 - name: Upload oh-my-zsh configuration
   copy:
@@ -61,3 +72,27 @@
   copy:
     src: ".vimrc"
     dest: "/home/{{ ansible_env.USER }}/.vimrc"
+
+- name: Check if systools is installed
+  register: systools_stat
+  stat:
+    path: /bin/systools
+
+- name: Download systools
+  register: download_systools
+  get_url:
+    url: https://github.com/samrap/systools/releases/download/v0.0.0/systools_0.0.0_linux_x86_64.tar.gz
+    dest: /tmp/systools_0.0.0_linux_x86_64.tar.gz
+  when: systools_stat.stat.exists == False
+
+- name: Install systools at /bin/systools
+  unarchive:
+    src: /tmp/systools_0.0.0_linux_x86_64.tar.gz
+    dest: /bin
+    remote_src: true
+    extra_opts:
+      # Rename to 'systools'
+      - --transform
+      - 's/systools_0.0.0_linux_x86_64/systools/'
+  become: yes
+  when: download_systools.changed

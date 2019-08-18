@@ -1,6 +1,0 @@
-export EDITOR="vim"
-
-alias l='ls -alh'
-alias c='clear'
-alias ..='cd ..'
-alias cat='bat '

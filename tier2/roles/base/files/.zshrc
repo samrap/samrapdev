@@ -92,6 +92,6 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-if [ -f $HOME/.sh_profile ]; then
-	source $HOME/.sh_profile
+if [ -f $HOME/.profile ]; then
+	source $HOME/.profile
 fi
