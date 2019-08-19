@@ -28,13 +28,11 @@ fi
 
 export EDITOR="vim"
 
-export SYSTOOLS_BACKUPS_S3_ENDPOINT={{ SYSTOOLS_BACKUPS_S3_ENDPOINT }}
-export SYSTOOLS_BACKUPS_S3_REGION={{ SYSTOOLS_BACKUPS_S3_REGION }}
-export SYSTOOLS_BACKUPS_S3_BUCKET={{ SYSTOOLS_BACKUPS_S3_BUCKET }}
-
 alias l='ls -alh'
 alias c='clear'
 alias ..='cd ..'
 alias cat='bat '
 
-source $HOME/.credentials
+if [ -f "$HOME/.environment" ] ; then
+    . "$HOME/.environment"
+fi

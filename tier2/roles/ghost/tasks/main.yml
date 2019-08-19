@@ -62,21 +62,21 @@
     mode: 0755
   become: true
 
-- name: Create Ghost install directory
+- name: Create Ghost deploy directory
   file:
-    path: "/home/{{ ansible_env.USER }}/ghost"
+    path: "/home/{{ ansible_env.USER }}/ghost_deploy"
     state: directory
     mode: 0755
-  register: ghost_path
+  register: ghost_deploy_path
 
 - name: Upload docker-compose configuration
   template:
     src: docker-compose.yml.j2
-    dest: "{{ ghost_path.path }}/docker-compose.yml"
+    dest: "{{ ghost_deploy_path.path }}/docker-compose.yml"
 
 - name: Create nginx Docker directory
   file:
-    path: "{{ ghost_path.path }}/nginx"
+    path: "{{ ghost_deploy_path.path }}/nginx"
     state: directory
     mode: 0755
   register: ghost_nginx_path
@@ -93,9 +93,9 @@
 
 - name: Create ghost_content mount point
   file:
-    path: /opt/ghost_content
+    path: "/home/{{ ansible_env.USER }}/ghost_content"
     state: directory
-  become: true
+  register: ghost_content_path
 
 - name: Create nginx mount point
   file:
@@ -106,6 +106,8 @@
 - name: Restore SSL certificates
   register: letsencrypt_restored
   shell: systools restore -d /etc/letsencrypt
+  args:
+    creates: /etc/letsencrypt
   become: yes
   ignore_errors: yes
 
@@ -115,8 +117,12 @@
 
 - name: Restore ghost_content
   register: ghost_content_restored
-  shell: systools restore -d /opt/ghost_content
-  become: yes
+  shell: "systools restore -d {{ ghost_content_path.path }}"
+  args:
+    # We already created the base directory, so we'll make sure that we restored
+    # at least the themes directory. This should ensure that we only ever do
+    # this during bootstrapping.
+    creates: "{{ ghost_content_path.path }}/themes"
   ignore_errors: yes
 
 - debug:
@@ -138,7 +144,7 @@
 - name: Bring up Ghost Docker services
   # TODO: figure out why this fails on first run
   docker_service:
-    project_src: "{{ ghost_path.path }}"
+    project_src: "{{ ghost_deploy_path.path }}"
     state: present
     # TODO: fix so that we can use TLS
     # see: https://github.com/ansible/ansible/issues/29471#issuecomment-329736312
