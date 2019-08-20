@@ -107,8 +107,9 @@
   register: letsencrypt_restored
   shell: systools restore -d /etc/letsencrypt
   args:
-    creates: /etc/letsencrypt
+    creates: /etc/letsencrypt/live/samrapdev.com
   become: yes
+  become_flags: "-E"
   ignore_errors: yes
 
 - debug:
@@ -149,3 +150,29 @@
     # TODO: fix so that we can use TLS
     # see: https://github.com/ansible/ansible/issues/29471#issuecomment-329736312
     tls: no
+
+- name: Install certbot renewal cron
+  cron:
+    name: "renew certificates"
+    minute: 0
+    hour: 2
+    # TODO variablize container name
+    job: certbot certonly -n --webroot -w /usr/share/nginx/html -d samrapdev.com --deploy-hook='docker exec ghost_deploy_nginx_1 nginx -s reload'
+    user: root
+  become: yes
+
+- name: Install ghost_content backup cron
+  cron:
+    name: "backup /home/samrap/ghost_content"
+    minute: 30
+    hour: 2
+    job: systools backup -d /home/samrap/ghost_content
+    user: samrap
+
+- name: Install letsencrypt backup cron
+  cron:
+    name: "backup /etc/letsencrypt"
+    minute: 30
+    hour: 2
+    job: sudo -E systools backup -d /etc/letsencrypt
+    user: samrap
