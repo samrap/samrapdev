@@ -70,6 +70,19 @@
     src: ".vimrc"
     dest: "/home/{{ ansible_env.USER }}/.vimrc"
 
+- name: Create log directory
+  file:
+    path: "/home/{{ ansible_env.USER }}/logs"
+    state: directory
+    mode: '0755'
+
+- name: Create scripts directory
+  file:
+    path: "/home/{{ ansible_env.USER }}/scripts"
+    state: directory
+    mode: '0755'
+
+
 - name: Check if systools is installed
   register: systools_stat
   stat:

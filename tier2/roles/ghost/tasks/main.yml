@@ -161,18 +161,17 @@
     user: root
   become: yes
 
-- name: Install ghost_content backup cron
-  cron:
-    name: "backup /home/samrap/ghost_content"
-    minute: 30
-    hour: 2
-    job: systools backup -d /home/samrap/ghost_content
-    user: samrap
+- name: Upload backup script
+  copy:
+    src: backup.sh
+    dest: /home/samrap/scripts/backup.sh
+    mode: '0775'
 
-- name: Install letsencrypt backup cron
+- name: Install backup cron
   cron:
-    name: "backup /etc/letsencrypt"
+    name: "run back up script"
     minute: 30
     hour: 2
-    job: sudo -E systools backup -d /etc/letsencrypt
-    user: samrap
+    job: "/home/samrap/scripts/backup.sh > /home/{{ ansible_env.USER }}/logs/backup.log 2>&1"
+    user: root
+  become: yes
