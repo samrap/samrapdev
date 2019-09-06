@@ -35,7 +35,7 @@ The Base tier, `tier0`, only needs to be provisioned once upon project or accoun
 
 ### Droplet tier
 
-The Droplet tier, `tier`, is run when spinning up a new droplet. This will be done initially to run the blog and subsequently to swap out the underlying droplet. It contains a [cloud-init](https://cloud-init.io/) script that runs the minimal provisioning of the droplet such that it is safely configured for SSH access which is required to run the following tier. Specifically, the cloud-init script creates a non-root user, locks down SSH access, and ensures that authentication uses the Base tier SSH keys.
+The Droplet tier, `tier1`, is run when spinning up a new droplet. This will be done initially to run the blog and subsequently to swap out the underlying droplet. It contains a [cloud-init](https://cloud-init.io/) script that runs the minimal provisioning of the droplet such that it is safely configured for SSH access which is required to run the following tier. Specifically, the cloud-init script creates a non-root user, locks down SSH access, and ensures that authentication uses the Base tier SSH keys.
 
 ### Bootstrap tier
 
